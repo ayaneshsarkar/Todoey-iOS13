@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
     
     let realm = try! Realm()
     
@@ -31,7 +31,7 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let item: Item? = todoItems?[indexPath.row]
-        let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         cell.textLabel?.text = item?.title ?? "No Items added yet"
         if let safeItem = item {
@@ -87,9 +87,21 @@ class TodoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    func delete(with item: Item) {
+        try! realm.write { realm.delete(item) }
+        tableView.reloadData()
+    }
+    
     func loadItems() {
         todoItems = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
+    }
+    
+    // MARK: - Delete data from Swipe
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = todoItems?[indexPath.row] {
+            delete(with: item)
+        }
     }
 }
 
