@@ -8,8 +8,11 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class TodoListViewController: SwipeTableViewController {
+    
+    @IBOutlet weak var searchBar: UISearchBar!
     
     let realm = try! Realm()
     
@@ -20,9 +23,26 @@ class TodoListViewController: SwipeTableViewController {
             loadItems()
         }
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        if let colourHex = selectedCategory?.colour {
+            title = selectedCategory!.name
+            
+            guard let navBar = navigationController?.navigationBar else {fatalError("Navigation controller does not exist.")}
+            
+            if let uiBackgroundTintColour = UIColor(hexString: colourHex) {
+                navBar.barTintColor = uiBackgroundTintColour
+                navBar.backgroundColor = uiBackgroundTintColour
+                navBar.tintColor = ContrastColorOf(uiBackgroundTintColour, returnFlat: true)
+                navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(uiBackgroundTintColour, returnFlat: true)]
+                
+                searchBar.barTintColor = uiBackgroundTintColour
+            }
+        }
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -34,10 +54,15 @@ class TodoListViewController: SwipeTableViewController {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         cell.textLabel?.text = item?.title ?? "No Items added yet"
+        if let colour = UIColor(hexString: selectedCategory!.colour)?.darken(byPercentage: (CGFloat(indexPath.row) / CGFloat(todoItems!.count))) {
+            cell.backgroundColor = colour
+            cell.textLabel?.textColor = ContrastColorOf(colour, returnFlat: true)
+        }
+        
         if let safeItem = item {
             cell.accessoryType = safeItem.done ? .checkmark : .none
         }
-                
+        
         return cell
     }
     
